@@ -1,0 +1,31 @@
+# Virtual Environment
+.venv/
+venv/
+
+# Environment
+.env
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+
+# Testing
+.pytest_cache/
+
+# Logs
+*.log
