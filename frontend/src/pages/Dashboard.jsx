@@ -61,7 +61,7 @@ export default function Dashboard() {
         <DashboardCard
           title="Pending"
           value={pendingTask}
-          icon="🟡"
+          icon="⌛"
           color="text-yellow-400"
         />
 
