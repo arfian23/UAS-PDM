@@ -15,7 +15,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "uas-pdm-production.up.railway.app",
+        "https://uas-pdm.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
