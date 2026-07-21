@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
-import { getTasks } from "../services/taskService";
-import DashboardCard from "../components/DashboardCard";
+import TaskModal from "../components/TaskModal";
+import {
+  getTasks,
+  deleteTask,
+  updateTask,
+} from "../services/taskService";
 
-export default function Dashboard() {
+export default function Schedule() {
+
   const [tasks, setTasks] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [editTask, setEditTask] = useState(null);
 
   useEffect(() => {
     loadTasks();
@@ -18,107 +25,271 @@ export default function Dashboard() {
     }
   }
 
-  const totalTask = tasks.length;
+  // Cek apakah tanggal task masih di masa depan (belum boleh diselesaikan)
+  function isFutureTask(task) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  const pendingTask = tasks.filter(
-    (task) => task.status === "Pending"
-  ).length;
+    const taskDate = new Date(task.task_date);
+    taskDate.setHours(0, 0, 0, 0);
 
-  const completedTask = tasks.filter(
-    (task) => task.status === "Completed"
-  ).length;
+    return taskDate > today;
+  }
 
-  const today = new Date().toISOString().split("T")[0];
+  async function handleDelete(id) {
 
-  const todayTask = tasks.filter(
-    (task) => task.task_date === today
-  ).length;
+    const confirmDelete = window.confirm(
+      "Apakah Anda yakin ingin menghapus jadwal ini?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteTask(id);
+      loadTasks();
+    } catch (err) {
+      console.error(err);
+      window.alert("Gagal menghapus data.");
+    }
+  }
+
+  async function handleComplete(task) {
+
+    if (isFutureTask(task)) return;
+
+    const confirmComplete = window.confirm(
+      `Tandai jadwal "${task.title}" sebagai selesai?`
+    );
+
+    if (!confirmComplete) return;
+
+    try {
+      await updateTask(task.id, {
+        ...task,
+        status: "Completed",
+      });
+      loadTasks();
+    } catch (err) {
+      console.error(err);
+      window.alert("Gagal memperbarui status.");
+    }
+  }
+
+  function handleEdit(task) {
+    setEditTask(task);
+    setOpenModal(true);
+  }
+
+  function handleAdd() {
+    setEditTask(null);
+    setOpenModal(true);
+  }
+
+  function closeModal() {
+    setOpenModal(false);
+    setEditTask(null);
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="p-6">
 
-      <div>
+      <div className="flex justify-between items-center mb-8">
 
-        <h1 className="text-4xl font-bold text-white">
-          📊 Dashboard
+        <h1 className="text-3xl font-bold text-white">
+          📅 Jadwal Saya
         </h1>
 
-        <p className="text-slate-400 mt-2">
-          Selamat datang di Smart Scheduler AI
-        </p>
+        <button
+          onClick={handleAdd}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg"
+        >
+          + Tambah Jadwal
+        </button>
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="bg-slate-800 rounded-xl overflow-hidden shadow-lg">
 
-        <DashboardCard
-          title="Total Task"
-          value={totalTask}
-          icon="📋"
-          color="text-cyan-400"
-        />
+        <table className="w-full text-white">
 
-        <DashboardCard
-          title="Pending"
-          value={pendingTask}
-          icon="⌛"
-          color="text-yellow-400"
-        />
+          <thead className="bg-slate-700">
 
-        <DashboardCard
-          title="Completed"
-          value={completedTask}
-          icon="✅"
-          color="text-green-400"
-        />
+            <tr>
 
-        <DashboardCard
-          title="Hari Ini"
-          value={todayTask}
-          icon="🔥"
-          color="text-red-400"
-        />
+              <th className="p-4 text-left">
+                Judul
+              </th>
+
+              <th>
+                Tanggal
+              </th>
+
+              <th>
+                Mulai
+              </th>
+
+              <th>
+                Selesai
+              </th>
+
+              <th>
+                Durasi
+              </th>
+
+              <th>
+                Prioritas
+              </th>
+
+              <th>
+                Status
+              </th>
+
+              <th>
+                Aksi
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {tasks.length === 0 ? (
+
+              <tr>
+
+                <td
+                  colSpan="8"
+                  className="text-center py-8 text-gray-400"
+                >
+                  Belum ada jadwal.
+                </td>
+
+              </tr>
+
+            ) : (
+
+              tasks.map((task) => {
+
+                const future = isFutureTask(task);
+
+                return (
+                  <tr
+                    key={task.id}
+                    className="border-b border-slate-700 hover:bg-slate-700 transition"
+                  >
+
+                    <td className="p-4">
+                      {task.title}
+                    </td>
+
+                    <td>
+                      {task.task_date}
+                    </td>
+
+                    <td>
+                      {task.start_time}
+                    </td>
+
+                    <td>
+                      {task.end_time}
+                    </td>
+
+                    <td>
+                      {task.duration} menit
+                    </td>
+
+                    <td>
+
+                      <span
+                        className={
+                          task.priority === "High"
+                            ? "text-red-400"
+                            : task.priority === "Medium"
+                            ? "text-yellow-400"
+                            : "text-green-400"
+                        }
+                      >
+                        {task.priority}
+                      </span>
+
+                    </td>
+
+                    <td>
+
+                      <span
+                        className={
+                          task.status === "Completed"
+                            ? "text-green-400"
+                            : "text-yellow-400"
+                        }
+                      >
+                        {task.status}
+                      </span>
+
+                    </td>
+
+                    <td>
+
+                      <div className="flex gap-2 justify-center">
+
+                        {task.status !== "Completed" && (
+                          <button
+                            onClick={() => handleComplete(task)}
+                            disabled={future}
+                            title={
+                              future
+                                ? "Belum bisa diselesaikan sebelum tanggal jadwal tiba"
+                                : ""
+                            }
+                            className={
+                              future
+                                ? "bg-slate-600 text-slate-400 px-3 py-1 rounded cursor-not-allowed"
+                                : "bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
+                            }
+                          >
+                            Selesaikan
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => handleEdit(task)}
+                          className="bg-amber-500 hover:bg-amber-600 px-3 py-1 rounded"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(task.id)}
+                          className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
+                        >
+                          Hapus
+                        </button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+                );
+              })
+
+            )}
+
+          </tbody>
+
+        </table>
 
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
-
-        <h2 className="text-2xl font-bold text-white mb-5">
-          🤖 AI Insight
-        </h2>
-
-        <div className="space-y-3 text-slate-300">
-
-          <p>
-            • Total jadwal Anda saat ini adalah <b>{totalTask}</b>.
-          </p>
-
-          <p>
-            • Masih terdapat <b>{pendingTask}</b> task yang belum selesai.
-          </p>
-
-          <p>
-            • Sebanyak <b>{completedTask}</b> task telah diselesaikan.
-          </p>
-
-          <p>
-            • Hari ini terdapat <b>{todayTask}</b> jadwal.
-          </p>
-
-          <p className="text-cyan-400 mt-5">
-            AI Recommendation:
-          </p>
-
-          <p>
-            Prioritaskan penyelesaian seluruh task dengan status
-            <b> Pending </b>
-            sebelum menambahkan jadwal baru agar beban pekerjaan tetap seimbang.
-          </p>
-
-        </div>
-
-      </div>
+      <TaskModal
+        open={openModal}
+        onClose={closeModal}
+        onSuccess={loadTasks}
+        editTask={editTask}
+      />
 
     </div>
   );
+
 }
