@@ -25,6 +25,17 @@ export default function Schedule() {
     }
   }
 
+  // Cek apakah tanggal task masih di masa depan (belum boleh diselesaikan)
+  function isFutureTask(task) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const taskDate = new Date(task.task_date);
+    taskDate.setHours(0, 0, 0, 0);
+
+    return taskDate > today;
+  }
+
   async function handleDelete(id) {
 
     const confirmDelete = window.confirm(
@@ -43,6 +54,8 @@ export default function Schedule() {
   }
 
   async function handleComplete(task) {
+
+    if (isFutureTask(task)) return;
 
     const confirmComplete = window.confirm(
       `Tandai jadwal "${task.title}" sebagai selesai?`
@@ -156,97 +169,110 @@ export default function Schedule() {
 
             ) : (
 
-              tasks.map((task) => (
+              tasks.map((task) => {
 
-                <tr
-                  key={task.id}
-                  className="border-b border-slate-700 hover:bg-slate-700 transition"
-                >
+                const future = isFutureTask(task);
 
-                  <td className="p-4">
-                    {task.title}
-                  </td>
+                return (
+                  <tr
+                    key={task.id}
+                    className="border-b border-slate-700 hover:bg-slate-700 transition"
+                  >
 
-                  <td>
-                    {task.task_date}
-                  </td>
+                    <td className="p-4">
+                      {task.title}
+                    </td>
 
-                  <td>
-                    {task.start_time}
-                  </td>
+                    <td>
+                      {task.task_date}
+                    </td>
 
-                  <td>
-                    {task.end_time}
-                  </td>
+                    <td>
+                      {task.start_time}
+                    </td>
 
-                  <td>
-                    {task.duration} menit
-                  </td>
+                    <td>
+                      {task.end_time}
+                    </td>
 
-                  <td>
+                    <td>
+                      {task.duration} menit
+                    </td>
 
-                    <span
-                      className={
-                        task.priority === "High"
-                          ? "text-red-400"
-                          : task.priority === "Medium"
-                          ? "text-yellow-400"
-                          : "text-green-400"
-                      }
-                    >
-                      {task.priority}
-                    </span>
+                    <td>
 
-                  </td>
+                      <span
+                        className={
+                          task.priority === "High"
+                            ? "text-red-400"
+                            : task.priority === "Medium"
+                            ? "text-yellow-400"
+                            : "text-green-400"
+                        }
+                      >
+                        {task.priority}
+                      </span>
 
-                  <td>
+                    </td>
 
-                    <span
-                      className={
-                        task.status === "Completed"
-                          ? "text-green-400"
-                          : "text-yellow-400"
-                      }
-                    >
-                      {task.status}
-                    </span>
+                    <td>
 
-                  </td>
+                      <span
+                        className={
+                          task.status === "Completed"
+                            ? "text-green-400"
+                            : "text-yellow-400"
+                        }
+                      >
+                        {task.status}
+                      </span>
 
-                  <td>
+                    </td>
 
-                    <div className="flex gap-2 justify-center">
+                    <td>
 
-                      {task.status !== "Completed" && (
+                      <div className="flex gap-2 justify-center">
+
+                        {task.status !== "Completed" && (
+                          <button
+                            onClick={() => handleComplete(task)}
+                            disabled={future}
+                            title={
+                              future
+                                ? "Belum bisa diselesaikan sebelum tanggal jadwal tiba"
+                                : ""
+                            }
+                            className={
+                              future
+                                ? "bg-slate-600 text-slate-400 px-3 py-1 rounded cursor-not-allowed"
+                                : "bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
+                            }
+                          >
+                            Selesaikan
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => handleComplete(task)}
-                          className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
+                          onClick={() => handleEdit(task)}
+                          className="bg-amber-500 hover:bg-amber-600 px-3 py-1 rounded"
                         >
-                          Selesaikan
+                          Edit
                         </button>
-                      )}
 
-                      <button
-                        onClick={() => handleEdit(task)}
-                        className="bg-amber-500 hover:bg-amber-600 px-3 py-1 rounded"
-                      >
-                        Edit
-                      </button>
+                        <button
+                          onClick={() => handleDelete(task.id)}
+                          className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
+                        >
+                          Hapus
+                        </button>
 
-                      <button
-                        onClick={() => handleDelete(task.id)}
-                        className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
-                      >
-                        Hapus
-                      </button>
+                      </div>
 
-                    </div>
+                    </td>
 
-                  </td>
-
-                </tr>
-
-              ))
+                  </tr>
+                );
+              })
 
             )}
 
