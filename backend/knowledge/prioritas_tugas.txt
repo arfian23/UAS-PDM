@@ -1,0 +1,19 @@
+PRIORITAS TUGAS
+
+High
+- Ujian
+- Presentasi
+- Sidang
+- Seminar
+- Meeting
+
+Medium
+- Praktikum
+- Diskusi
+- Tugas Kelompok
+- Konsultasi Dosen
+
+Low
+- Membaca Buku
+- Olahraga
+- Belajar Mandiri

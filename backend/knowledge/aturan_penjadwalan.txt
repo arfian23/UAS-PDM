@@ -1,0 +1,13 @@
+ATURAN PENJADWALAN
+
+1. Tidak boleh terdapat dua kegiatan pada waktu yang sama.
+
+2. Prioritas High tidak boleh dipindahkan apabila sudah memiliki jadwal.
+
+3. Prioritas Medium dapat dipindahkan apabila terjadi bentrok.
+
+4. Prioritas Low dapat dijadwalkan ulang secara otomatis.
+
+5. Jika waktu yang dipilih bentrok, sistem mencari slot kosong terdekat.
+
+6. Jadwal di luar jam operasional kampus tidak disarankan.

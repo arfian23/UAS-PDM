@@ -1,36 +1,23 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from agents.planner_agent import create_plan
-from database.supabase import supabase
+from agents.planner_agent import planner
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/planner",
+    tags=["Planner"]
+)
+
 
 class PlannerInput(BaseModel):
     text: str
 
 
-@router.post("/agent/planner")
-def planner(user: PlannerInput):
+@router.post("/")
+def create_planner(user: PlannerInput):
 
-    existing = (
-        supabase
-        .table("tasks")
-        .select("*")
-        .execute()
-    )
+    answer = planner(user.text)
 
-    plans = create_plan(
-        user.text,
-        existing.data
-    )
-
-    for task in plans:
-        (
-            supabase
-            .table("tasks")
-            .insert(task)
-            .execute()
-        )
-
-    return plans
+    return {
+        "response": answer
+    }

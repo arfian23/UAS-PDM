@@ -1,42 +1,76 @@
 import json
-
-from langchain_google_genai import ChatGoogleGenerativeAI
-
+from datetime import datetime
+from database.task import save_task
+from google import genai
 from config import GOOGLE_API_KEY
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    google_api_key=GOOGLE_API_KEY,
-    temperature=0
-)
+client = genai.Client(api_key=GOOGLE_API_KEY)
+
 
 def extract_task(user_input: str):
+
+    today = datetime.today().strftime("%Y-%m-%d")
 
     prompt = f"""
 Kamu adalah AI Scheduler.
 
-Ubah kalimat berikut menjadi JSON.
+Hari ini adalah {today}.
 
-Balas HANYA JSON.
+Jika pengguna mengatakan:
+- hari ini
+- besok
+- lusa
+- minggu depan
+- senin depan
+
+maka hitung berdasarkan tanggal hari ini.
+
+Balas HANYA JSON tanpa markdown.
 
 Format:
 
 {{
-"title":"",
-"description":"",
-"task_date":"",
-"start_time":"",
-"end_time":"",
-"duration":0,
-"priority":"",
-"status":"Pending"
+    "title":"",
+    "description":"",
+    "task_date":"YYYY-MM-DD",
+    "start_time":"HH:MM",
+    "end_time":"HH:MM",
+    "duration":0,
+    "priority":"Low",
+    "status":"Pending"
 }}
 
-Kalimat:
 
+Kalimat:
 {user_input}
 """
 
-    response = llm.invoke(prompt)
+    response = client.models.generate_content(
+        model="gemini-flash-latest",
+        contents=prompt,
+    )
 
-    return json.loads(response.content)
+    text = response.text.strip()
+
+    if text.startswith("```"):
+        text = text.replace("```json", "")
+        text = text.replace("```", "")
+        text = text.strip()
+
+    return json.loads(text)
+
+
+if __name__ == "__main__":
+
+    hasil = extract_task(
+        "Besok jam 8 pagi presentasi Data Mining selama 2 jam prioritas tinggi"
+    )
+
+    print(json.dumps(hasil, indent=4, ensure_ascii=False))
+
+    response = save_task(hasil)
+
+    print("\n✅ Task berhasil disimpan ke Supabase.")
+
+    if response.data:
+        print("ID :", response.data[0]["id"])
