@@ -3,6 +3,7 @@ import TaskModal from "../components/TaskModal";
 import {
   getTasks,
   deleteTask,
+  updateTask,
 } from "../services/taskService";
 
 export default function Schedule() {
@@ -38,6 +39,26 @@ export default function Schedule() {
     } catch (err) {
       console.error(err);
       window.alert("Gagal menghapus data.");
+    }
+  }
+
+  async function handleComplete(task) {
+
+    const confirmComplete = window.confirm(
+      `Tandai jadwal "${task.title}" sebagai selesai?`
+    );
+
+    if (!confirmComplete) return;
+
+    try {
+      await updateTask(task.id, {
+        ...task,
+        status: "Completed",
+      });
+      loadTasks();
+    } catch (err) {
+      console.error(err);
+      window.alert("Gagal memperbarui status.");
     }
   }
 
@@ -195,6 +216,15 @@ export default function Schedule() {
                   <td>
 
                     <div className="flex gap-2 justify-center">
+
+                      {task.status !== "Completed" && (
+                        <button
+                          onClick={() => handleComplete(task)}
+                          className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
+                        >
+                          Selesaikan
+                        </button>
+                      )}
 
                       <button
                         onClick={() => handleEdit(task)}
